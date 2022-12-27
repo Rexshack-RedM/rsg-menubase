@@ -1,29 +1,29 @@
 (function() {
-	let MenuTpl =
-		'<div id="menu_{{_namespace}}_{{_name}}" class="menu{{#align}} align-{{align}}{{/align}}">' +
-			'<div class="head"><span>{{{title}}}</span></div>' +					
-				'<div class="desciption">{{{subtext}}}</div>' +
-				'<div class="menu-items">' +
-				'<div class="topline"></div>' +
-					'{{#elements}}' +
-						'<div class="menu-item {{#selected}}selected{{/selected}} {{#isSlider}}slider{{/isSlider}}">' +
-							'<div id="item-label">{{{label}}}</div><div class="arrows">{{#isSlider}}<i class="fas fa-chevron-left"></i><div id="slider-label">{{{sliderLabel}}}</div><i class="fas fa-chevron-right"></i>{{/isSlider}}</div>' +
-						'</div>' +
-										
-					'{{/elements}}' +
-				'</div>'+
-				'<div class="scrollbottom"></div>' +
-				'{{#elements}}' +
-				'{{#selected}}' +
-				'<div class="options-amount">{{{list_id}}}/{{{list_max}}}</div>' +
-				'<br>'+
-				'<div class="desciption">{{{desc}}}</div>' +
-				'{{/selected}}' +
-				'{{/elements}}' +
-				'<br>'+
-			'</div>' +
-		'</div>'
-	;
+    let MenuTpl =
+        '<div id="menu_{{_namespace}}_{{_name}}" class="menu{{#align}} align-{{align}}{{/align}}">' +
+        '<div class="head"><span>{{{title}}}</span></div>' +
+        '<div class="desciptions">{{{subtext}}}</div>' +
+        '<div class="menu-items">' +
+        '<div class="topline"></div>' +
+        '{{#elements}}' +
+        '<div class="menu-item {{#selected}}selected{{/selected}} {{#isSlider}}slider{{/isSlider}}" style="height:{{itemHeight}};!important">' +
+        '<div id="item-label">{{{label}}}</div><div class="arrows">{{#isSlider}}<i class="fas fa-arrow-circle-left"style="font-size:15px;color: rgb(239, 228, 205);text-shadow:2px 2px 4px #000000;"></i><div id="slider-label">{{{sliderLabel}}}</div><i class="fas fa-arrow-alt-circle-right"style="font-size:15px;color: rgb(239, 228, 205);text-shadow:2px 2px 4px #000000;"></i>{{/isSlider}}</div>' +
+        '</div>' +
+
+        '{{/elements}}' +
+        '</div>' +
+        '<div class="scrollbottom"></div>' +
+        '{{#elements}}' +
+        '{{#selected}}' +
+        '<div class="options-amount">{{{list_id}}}/{{{list_max}}}</div>' +
+        '<br>' +
+        '<div class="desciption">{{{desc}}}</div>' +
+        '{{/selected}}' +
+        '{{/elements}}' +
+        '<br>' +
+        '</div>' +
+        '</div>'
+        ;
 
     window.MenuData = {};
     MenuData.ResourceName = 'rsg-menubase';
@@ -57,6 +57,10 @@
         for (let i = 0; i < data.elements.length; i++) {
             data.elements[i]._namespace = namespace;
             data.elements[i]._name = name;
+			if ( data.elements[i].type == "check"){
+				data.elements[i].isActive = false;
+							console.log(data.elements[i].type);
+			}
         }
 
         MenuData.opened[namespace][name] = data;
@@ -109,24 +113,32 @@
                     switch (element.type) {
                         case 'default':
 							element.list_id = i + 1;
-							element.list_max = menuData.elements.length;
                             break;
 
-                        case 'slider': {
+                        case 'slider': 
+						
                             element.isSlider = true;
 							element.list_id = i + 1;
-							element.list_max = menuData.elements.length;
-                            element.sliderLabel = (typeof element.options == 'undefined') ? element.value : element.options[element.value];
-
+                            element.sliderLabel = (typeof element.options == 'undefined') ? element.value : element.options[element.value-1];
+							element.DescriptionLabel = (typeof element.optionsDescription == 'undefined') ? "" : element.optionsDescription[element.value-1];
+                            element.SubDescriptionLabel = (typeof element.optionsSubDescription == 'undefined') ? "" : element.optionsSubDescription[element.value-1];
+							element.labelInDesc = (typeof element.optionsDescription == 'object');
+                            element.labelInSubDesc = (typeof element.optionsSubDescription == 'object');
                             break;
-                        }
+							
+                        case 'check': 
+                            element.isCheck = true;
+							element.list_id = i + 1;
+                            break;
 
                         default:
 							element.list_id = i + 1;
-							element.list_max = menuData.elements.length;
                             break;
                     }
-
+					element.list_max = menuData.elements.length;
+                    if (element.list_max >8){
+                        view.isBigger = true;
+                    }
                     if (i == MenuData.pos[namespace][name]) {
                         element.selected = true;
                     }
@@ -147,7 +159,7 @@
     };
 
     MenuData.submit = function(namespace, name, data) {
-        $.post('http://' + MenuData.ResourceName + '/menu_submit', JSON.stringify({
+        $.post('https://' + MenuData.ResourceName + '/menu_submit', JSON.stringify({
             _namespace: namespace,
             _name: name,
             current: data,
@@ -156,14 +168,14 @@
     };
 
     MenuData.cancel = function(namespace, name) {
-        $.post('http://' + MenuData.ResourceName + '/menu_cancel', JSON.stringify({
+        $.post('https://' + MenuData.ResourceName + '/menu_cancel', JSON.stringify({
             _namespace: namespace,
             _name: name,
         }));
     };
 
     MenuData.change = function(namespace, name, data) {
-        $.post('http://' + MenuData.ResourceName + '/menu_change', JSON.stringify({
+        $.post('https://' + MenuData.ResourceName + '/menu_change', JSON.stringify({
             _namespace: namespace,
             _name: name,
             current: data,
@@ -176,37 +188,55 @@
     };
 
     window.onData = (data) => {
-        switch (data.ak_menubase_action) {
+        switch (data.redemrp_menu_base_action) {
 
             case 'openMenu': {
-                MenuData.open(data.ak_menubase_namespace, data.ak_menubase_name, data.ak_menubase_data);
+                MenuData.open(data.redemrp_menu_base_namespace, data.redemrp_menu_base_name, data.redemrp_menu_base_data);
                 break;
             }
 
             case 'closeMenu': {
-                MenuData.close(data.ak_menubase_namespace, data.ak_menubase_name);
+                MenuData.close(data.redemrp_menu_base_namespace, data.redemrp_menu_base_name);
                 break;
             }
 
             case 'controlPressed': {
-                switch (data.ak_menubase_control) {
+                switch (data.redemrp_menu_base_control) {
 
-                    case 'ENTER': {
+
+					case 'ENTER': {
                         let focused = MenuData.getFocused();
 
                         if (typeof focused != 'undefined') {
                             let menu = MenuData.opened[focused.namespace][focused.name];
                             let pos = MenuData.pos[focused.namespace][focused.name];
                             let elem = menu.elements[pos];
+					
+                            switch (elem.type) {
+                                case 'default':
+									if (menu.elements.length > 0) {
+										MenuData.submit(focused.namespace, focused.name, elem);
+									}
+                                    break;
 
-                            if (menu.elements.length > 0) {
-                                MenuData.submit(focused.namespace, focused.name, elem);
+                                case 'check': {
+										console.log(elem.isActive);
+                                       	elem.isActive = !elem.isActive;
+										if (menu.elements.length > 0) {
+											MenuData.submit(focused.namespace, focused.name, elem);
+										}
+										MenuData.render();
+                                    break;
+                                }
+
+                                default:
+                                    break;
                             }
+
                         }
 
                         break;
                     }
-
                     case 'BACKSPACE': {
                         let focused = MenuData.getFocused();
 
@@ -242,7 +272,7 @@
 
                             MenuData.change(focused.namespace, focused.name, elem);
                             MenuData.render();
-                            $.post('http://' + MenuData.ResourceName + '/playsound');
+                            $.post('https://' + MenuData.ResourceName + '/playsound');
 
                             $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
                         }
@@ -276,7 +306,7 @@
 
                             MenuData.change(focused.namespace, focused.name, elem);
                             MenuData.render();
-                            $.post('http://' + MenuData.ResourceName + '/playsound');
+                            $.post('https://' + MenuData.ResourceName + '/playsound');
 
                             $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
                         }
@@ -338,11 +368,6 @@
                                     break;
 
                                 case 'slider': {
-                                    if (typeof elem.options != 'undefined' && elem.value < elem.options.length - 1) {
-                                        elem.value++;
-                                        MenuData.change(focused.namespace, focused.name, elem);
-                                    }
-
                                     if (typeof elem.max != 'undefined' && elem.value < elem.max) {
 										
 										if( typeof elem.hop != 'undefined'){
