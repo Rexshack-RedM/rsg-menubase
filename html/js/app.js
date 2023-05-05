@@ -339,6 +339,7 @@
                                         elem.value--;
 										}
                                         MenuData.change(focused.namespace, focused.name, elem);
+                                        MenuData.submit(focused.namespace, focused.name, elem);
                                     }
 
                                     MenuData.render();
@@ -384,6 +385,7 @@
 											elem.value++;
 										}
                                         MenuData.change(focused.namespace, focused.name, elem);
+                                        MenuData.submit(focused.namespace, focused.name, elem);
                                     }
 
                                     MenuData.render();
