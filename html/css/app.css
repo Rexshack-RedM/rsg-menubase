@@ -135,12 +135,7 @@ i {
 }
 
 .desciptions {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-
-
-
+    margin-left: 3vh;
 }
 
 .options-amount {
@@ -174,15 +169,16 @@ i {
 
 
 .arrows {
-    width: 25%;
-    margin-left:80%;
+    width: 40%;
+    margin-left:67%;
     margin-top:-24px;
 
 }
 
 
 #item-label {
-    text-align: center
+    margin-left: 3vh;
+    text-align: left
 }
 
 
