@@ -1,29 +1,65 @@
 (function() {
-    let MenuTpl =
-        '<div id="menu_{{_namespace}}_{{_name}}" class="menu{{#align}} align-{{align}}{{/align}}">' +
-        '<div class="head"><span>{{{title}}}</span></div>' +
-        '<div class="desciptions">{{{subtext}}}</div>' +
-        '<div class="menu-items">' +
-        '<div class="topline"></div>' +
-        '{{#elements}}' +
-        '<div class="menu-item {{#selected}}selected{{/selected}} {{#isSlider}}slider{{/isSlider}}" style="height:{{itemHeight}};!important">' +
-        '<div id="item-label">{{{label}}}</div><div class="arrows">{{#isSlider}}<i class="fas fa-arrow-circle-left"style="font-size:15px;color: rgb(239, 228, 205);text-shadow:2px 2px 4px #000000;"></i><div id="slider-label">{{{sliderLabel}}}</div><i class="fas fa-arrow-alt-circle-right"style="font-size:15px;color: rgb(239, 228, 205);text-shadow:2px 2px 4px #000000;"></i>{{/isSlider}}</div>' +
-        '</div>' +
+    let MenuTpl = `
+    <div id="menu_{{_namespace}}_{{_name}}" class="menu{{#align}} align-{{align}}{{/align}}">
+        <div class="head"><span>{{{title}}}</span></div>
+        <div class="desciptions">{{{subtext}}}</div>
+        <div class="topline"></div>
+        <div class="menu-items">
+            {{#isGrid}}
+            <div class="grid-container">
+            {{#elements}}
+            <div class="grid-item {{#selected}}selected{{/selected}}">
+                {{#image}}<img src="nui://ip-inventory/web/images/items/{{{image}}}.png"></img>{{/image}}
+                {{^image}}
+                <div id="item-label" {{#image}}class="image-pad"{{/image}}>{{{label}}}</div>
+                {{/image}}
+            </div>
+            {{/elements}}
+            </div>
+             {{/isGrid}}
+             {{^isGrid}}
+            {{#elements}}
+            {{#isNotSelectable}}
+            <div class="menu-item {{#isSlider}}slider{{/isSlider}}" {{#itemHeight}} style="height:{{{itemHeight}}}!important"{{/itemHeight}}>
+            {{/isNotSelectable}}
+               {{^isNotSelectable}}
+                <div class="menu-item {{#selected}}selected{{/selected}} {{#isSlider}}slider{{/isSlider}}" {{#itemHeight}} style="height:{{{itemHeight}}}!important"{{/itemHeight}}>
+                {{/isNotSelectable}}
+                    {{#image}}<img class="item-image" src="nui://ip-inventory/web/images/items/{{{image}}}.png"></img>{{/image}}
+                    <div id="item-label" {{#image}}class="image-pad"{{/image}}>{{{label}}}</div>
+                    <div class="arrows">
+                        {{#isSlider}}<i class="fas fa-arrow-circle-left"></i>{{/isSlider}}
+                        <div id="slider-label">{{{sliderLabel}}}</div>
+                        {{#isSlider}}<i class="fas fa-arrow-alt-circle-right"></i>{{/isSlider}}
+                    </div>
+                </div>
+            {{/elements}}
+          {{/isGrid}}
+        </div>
+        <div class="scrollbottom"></div>
+        {{#elements}}
+            {{#selected}}
+                <div class="options-amount">{{{list_id}}}/{{{list_max}}}</div>
+                <br>
+                <div class="desciption">{{{desc}}}</div>
+            {{/selected}}
+        {{/elements}}
+        <br>
+    </div>`;
 
-        '{{/elements}}' +
-        '</div>' +
-        '<div class="scrollbottom"></div>' +
-        '{{#elements}}' +
-        '{{#selected}}' +
-        '<div class="options-amount">{{{list_id}}}/{{{list_max}}}</div>' +
-        '<br>' +
-        '<div class="desciption">{{{desc}}}</div>' +
-        '{{/selected}}' +
-        '{{/elements}}' +
-        '<br>' +
-        '</div>' +
-        '</div>'
-        ;
+        function scrollToElement(element, block = "nearest") {
+            if (element) {
+                const menuContainer = document.querySelector(".menu .menu-items");
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = menuContainer.getBoundingClientRect();
+    
+                if (elementRect.bottom > containerRect.bottom) {
+                    menuContainer.scrollTop += elementRect.bottom - containerRect.bottom;
+                } else if (elementRect.top < containerRect.top) {
+                    menuContainer.scrollTop -= containerRect.top - elementRect.top;
+                }
+            }
+        }
 
     window.MenuData = {};
     MenuData.ResourceName = 'rsg-menubase';
@@ -80,14 +116,20 @@
         });
 
         MenuData.render();
-        $('#menu_' + namespace + '_' + name).find('.menu-item.selected')[0].scrollIntoView();
+        let selectedElement = $("#menu_" + namespace + "_" + name).find(".menu-item.selected, .grid-item.selected");
+        if (selectedElement.length > 0) {
+            scrollToElement(selectedElement[0]);
+        }
     };
 
     MenuData.close = function(namespace, name) {
         delete MenuData.opened[namespace][name];
 
         for (let i = 0; i < MenuData.focus.length; i++) {
-            if (MenuData.focus[i].namespace == namespace && MenuData.focus[i].name == name) {
+            if (
+                MenuData.focus[i].namespace == namespace &&
+                MenuData.focus[i].name == name
+            ) {
                 MenuData.focus.splice(i, 1);
                 break;
             }
@@ -274,7 +316,10 @@
                             MenuData.render();
                             $.post('https://' + MenuData.ResourceName + '/playsound');
 
-                            $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
+                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
+                            if (selectedElement.length > 0) {
+                                scrollToElement(selectedElement[0]);
+                            }
                         }
 
                         break;
@@ -308,7 +353,10 @@
                             MenuData.render();
                             $.post('https://' + MenuData.ResourceName + '/playsound');
 
-                            $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
+                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
+                            if (selectedElement.length > 0) {
+                                scrollToElement(selectedElement[0]);
+                            }
                         }
 
                         break;
@@ -350,7 +398,10 @@
                                     break;
                             }
 
-                            $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
+                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
+                            if (selectedElement.length > 0) {
+                                scrollToElement(selectedElement[0]);
+                            }
                         }
 
                         break;
@@ -396,7 +447,10 @@
                                     break;
                             }
 
-                            $('#menu_' + focused.namespace + '_' + focused.name).find('.menu-item.selected')[0].scrollIntoView();
+                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
+                            if (selectedElement.length > 0) {
+                                scrollToElement(selectedElement[0]);
+                            }
                         }
 
                         break;
