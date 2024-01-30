@@ -71,6 +71,38 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 
     end
 
+    menu.addNewElement                    = function(element)
+        menu.data.elements[#menu.data.elements + 1] = element
+    end
+
+    menu.removeElementByValue             = function(value, stop)
+        -- remove element from table
+        for i = 1, #menu.data.elements, 1 do
+            if menu.data.elements[i] then
+                if menu.data.elements[i].value == value then
+                    table.remove(menu.data.elements, i)
+                    if stop then
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    menu.removeElementByIndex             = function(index, stop)
+        -- remove element from table
+        for i = 1, #menu.data.elements, 1 do
+            if menu.data.elements[i] then
+                if i == index then
+                    table.remove(menu.data.elements, i)
+                    if stop then
+                        break
+                    end
+                end
+            end
+        end
+    end
+
     menu.refresh = function()
         MenuData.RegisteredTypes[type].open(namespace, name, menu.data)
     end
