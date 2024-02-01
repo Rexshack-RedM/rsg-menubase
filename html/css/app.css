@@ -1,5 +1,3 @@
-/* MADE BY SLIZZARN - DISCORD: slizzarn#1144 GITHUB: https://github.com/slizzarn-fivem */
-
 @font-face {
 	font-family: crock;
 	src: url(../fonts/crock.ttf) format('truetype')
@@ -23,24 +21,25 @@
 
 .menu {
 	font-family: "crock", crock, serif;
-	min-width: 20vw;
+	width: 550px;
 	height: auto;
+	max-height: 1026px;
 	color: #fff;
 	position: absolute;
-	padding: 35px;
 	background-image: url(inkroller_1a.png);
 	background-repeat: no-repeat;
 	background-position: center;
-	margin-top: -10px;
 	background-size: 100% 100%;
+	margin-top: auto;
+	margin-bottom: auto;
 }
 
 .topline {
 	position: relative;
-	width: 87%;
+	width: 82%;
 	height: 4px;
-	left: 25px;
-	top: -3px;
+	align-items: center;
+	margin: auto;
 	background-image: url(divider_line.png);
 	background-repeat: no-repeat;
 	background-position: center;
@@ -48,11 +47,10 @@
 }
 
 .scrollbottom {
-	width: 88%;
+	width: 82%;
 	height: 59px;
-	margin-left: 25;
-	margin-right: auto;
-	margin-top: -15px;
+	align-items: center;
+	margin: auto;
 	background-image: url(scroller_right_bottom.png);
 	background-repeat: no-repeat;
 	background-position: center;
@@ -90,11 +88,13 @@
 
 .menu .menu-items {
 	min-height: 5vh;
-	max-height: 39vh;
+	max-height: 35vh;
 	overflow-y: hidden;
-	inline-size: 480px;
+	inline-size: 500px;
 	overflow-wrap: break-word;
-	margin-left: 10px;
+	padding-bottom: 5px;
+	align-items: center;
+	margin: auto;
 }
 
 
@@ -102,7 +102,7 @@
 	width: 87%;
 	height: 2vh;
 	display: block;
-	padding: 15px;
+	padding: 20px;
 	font-size: 20px;
 	text-align: left;
 	margin-top: 6px;
@@ -111,7 +111,7 @@
 	background-image: url(selection_box_bg_1d.png);
 	background-repeat: no-repeat;
 	background-position: center;
-	background-size: 100% 110%;
+	background-size: 100% 100%;
 	font-family: "crock", HapnaSlabSerif-Medium, serif;
 }
 
@@ -149,9 +149,9 @@ i {
 
 .desciption {
 	text-align: center;
-	font-size: 18px;
+	font-size: 16px;
 	font-family: HapnaSlabSerif-Medium;
-	inline-size: 420px;
+	inline-size: 400px;
 	margin: auto;
 	overflow-wrap: break-word;
 }
@@ -286,7 +286,7 @@ i {
 	height: 80px;
 	padding: 12px;
 	margin-top: 5px;
-	margin-left: 31px;
+	/* margin-left: 31px; */
 	background-image: url(selection_box_bg_1d.png);
 	background-repeat: no-repeat;
 	background-size: 100% 100%;
@@ -312,7 +312,7 @@ i {
 	.menu .menu-items {
 		min-height: 5vh;
 		max-height: 41.5vh;
-		inline-size: 399px;
+		inline-size: 490px;
 	}
 
 	#slider-label {
@@ -343,8 +343,6 @@ i {
 		overflow-wrap: break-word;
 		margin-left: 30px;
 	}
-
-
 }
 
 
