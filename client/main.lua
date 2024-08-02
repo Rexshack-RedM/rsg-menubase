@@ -187,11 +187,11 @@ function MenuData.GetOpened(type, namespace, name)
 end
 
 function MenuData.GetOpenedMenus()
-	return MenuData.Opened
+    return MenuData.Opened
 end
 
 function MenuData.IsOpen(type, namespace, name)
-	return MenuData.GetOpened(type, namespace, name) ~= nil
+    return MenuData.GetOpened(type, namespace, name) ~= nil
 end
 
 function MenuData.ReOpen(oldMenu)
@@ -258,6 +258,7 @@ end)
 RegisterNUICallback("closeui", function(data)
 	TriggerEvent("menuapi:closemenu")
 end)
+
 
 CreateThread(function()
 	local PauseMenuState = false
