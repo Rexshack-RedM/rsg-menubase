@@ -259,7 +259,6 @@ RegisterNUICallback("closeui", function(data)
 	TriggerEvent("menuapi:closemenu")
 end)
 
-
 CreateThread(function()
 	local PauseMenuState = false
 	local MenusToReOpen = {}
