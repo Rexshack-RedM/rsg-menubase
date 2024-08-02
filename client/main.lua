@@ -34,8 +34,16 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 	menu.change = change
 	menu.data.selected = MenuData.LastSelectedIndex[menu.type .. "_" .. menu.namespace .. "_" .. menu.name] or 0
 
+	if menu.data.disableMovement then
+		FreezeEntityPosition(PlayerPedId(), true)
+	end
+
 	menu.close = function()
 		MenuData.RegisteredTypes[type].close(namespace, name)
+
+		if menu.data.disableMovement then
+			FreezeEntityPosition(PlayerPedId(), false)
+		end
 
 		for i = 1, #MenuData.Opened, 1 do
 			if MenuData.Opened[i] then
