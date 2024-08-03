@@ -38,12 +38,21 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 		FreezeEntityPosition(PlayerPedId(), true)
 	end
 
+	if menu.data.lockInventory then
+        LocalPlayer.state:set("inv_busy", true, true)
+    end
+
 	menu.close = function()
 		MenuData.RegisteredTypes[type].close(namespace, name)
 
 		if menu.data.disableMovement then
 			FreezeEntityPosition(PlayerPedId(), false)
 		end
+
+		if menu.data.lockInventory then
+            LocalPlayer.state:set("inv_busy", false, true)
+        end
+		
 
 		for i = 1, #MenuData.Opened, 1 do
 			if MenuData.Opened[i] then
