@@ -218,27 +218,30 @@ end
 
 local MenuType = "default"
 
-RegisterNUICallback("menu_submit", function(data)
+RegisterNUICallback("menu_submit", function(data, cb)
 	PlaySoundFrontend("SELECT", "RDRO_Character_Creator_Sounds", true, 0)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
 	if menu.submit ~= nil then
 		menu.submit(data, menu)
 	end
+	cb('ok')
 end)
 
-RegisterNUICallback("playsound", function()
+RegisterNUICallback("playsound", function(data, cb)
 	PlaySoundFrontend("NAV_LEFT", "PAUSE_MENU_SOUNDSET", true, 0)
+	cb('ok')
 end)
 
-RegisterNUICallback("menu_cancel", function(data)
+RegisterNUICallback("menu_cancel", function(data, cb)
 	PlaySoundFrontend("SELECT", "RDRO_Character_Creator_Sounds", true, 0)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
 	if menu.cancel ~= nil then
 		menu.cancel(data, menu)
 	end
+	cb('ok')
 end)
 
-RegisterNUICallback("menu_change", function(data)
+RegisterNUICallback("menu_change", function(data, cb)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
 
 	for i = 1, #data.elements, 1 do
@@ -254,18 +257,22 @@ RegisterNUICallback("menu_change", function(data)
 	if menu.change ~= nil then
 		menu.change(data, menu)
 	end
+
+	cb('ok')
 end)
 
-RegisterNUICallback("update_last_selected", function(data)
+RegisterNUICallback("update_last_selected", function(data, cb)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
 	local menuKey = menu.type .. "_" .. menu.namespace .. "_" .. menu.name
 	if data.selected ~= nil then
 		MenuData.LastSelectedIndex[menuKey] = data.selected
 	end
+	cb('ok')
 end)
 
-RegisterNUICallback("closeui", function(data)
+RegisterNUICallback("closeui", function(data, cb)
 	TriggerEvent("menuapi:closemenu")
+	cb('ok')
 end)
 
 CreateThread(function()
