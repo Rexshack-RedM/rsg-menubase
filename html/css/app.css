@@ -89,7 +89,7 @@
 .menu .menu-items {
 	min-height: 5vh;
 	max-height: 35vh;
-	overflow-y: hidden;
+	overflow-y: auto;
 	inline-size: 500px;
 	overflow-wrap: break-word;
 	padding-bottom: 5px;
@@ -165,7 +165,7 @@ i {
 .options-amount {
 	float: right;
 	opacity: 0.8;
-	font-size: 19px;
+font-size: 24px;
 	margin-top: -5%;
 	margin-right: 7%;
 }
@@ -312,6 +312,7 @@ i {
 	.menu .menu-items {
 		min-height: 5vh;
 		max-height: 41.5vh;
+		overflow-y: auto;
 		inline-size: 490px;
 	}
 
