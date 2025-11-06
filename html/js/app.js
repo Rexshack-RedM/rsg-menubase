@@ -49,14 +49,16 @@
 
     function scrollToElement(element, block = "nearest") {
         if (element) {
-            const menuContainer = document.querySelector(".menu .menu-items"); // Replace with your actual menu container's class or ID
-            const elementRect = element.getBoundingClientRect();
-            const containerRect = menuContainer.getBoundingClientRect();
+            const menuContainer = element.closest('.menu').querySelector('.menu-items');
+            if (menuContainer) {
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = menuContainer.getBoundingClientRect();
 
-            if (elementRect.bottom > containerRect.bottom) {
-                menuContainer.scrollTop += elementRect.bottom - containerRect.bottom;
-            } else if (elementRect.top < containerRect.top) {
-                menuContainer.scrollTop -= containerRect.top - elementRect.top;
+                if (elementRect.bottom > containerRect.bottom) {
+                    menuContainer.scrollTop += elementRect.bottom - containerRect.bottom;
+                } else if (elementRect.top < containerRect.top) {
+                    menuContainer.scrollTop -= containerRect.top - elementRect.top;
+                }
             }
         }
     }
