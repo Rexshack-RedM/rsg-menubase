@@ -89,7 +89,10 @@
 .menu .menu-items {
 	min-height: 5vh;
 	max-height: 35vh;
-	overflow-y: hidden;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: #1a242d #272733;
 	inline-size: 500px;
 	overflow-wrap: break-word;
 	padding-bottom: 5px;
