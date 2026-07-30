@@ -2,6 +2,7 @@ MenuData = {}
 MenuData.Opened = {}
 MenuData.RegisteredTypes = {}
 MenuData.LastSelectedIndex = {}
+MenuData.LockCount = { movement = 0, inventory = 0 }
 
 MenuData.RegisteredTypes["default"] = {
 	open = function(namespace, name, data)
@@ -17,7 +18,6 @@ MenuData.RegisteredTypes["default"] = {
 			ak_menubase_action = "closeMenu",
 			ak_menubase_namespace = namespace,
 			ak_menubase_name = name,
-			ak_menubase_data = data,
 		})
 	end,
 }
@@ -35,10 +35,12 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 	menu.data.selected = MenuData.LastSelectedIndex[menu.type .. "_" .. menu.namespace .. "_" .. menu.name] or 0
 
 	if menu.data.disableMovement then
+		MenuData.LockCount.movement = MenuData.LockCount.movement + 1
 		FreezeEntityPosition(PlayerPedId(), true)
 	end
 
 	if menu.data.lockInventory then
+		MenuData.LockCount.inventory = MenuData.LockCount.inventory + 1
         LocalPlayer.state:set("inv_busy", true, true)
     end
 
@@ -46,23 +48,28 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 		MenuData.RegisteredTypes[type].close(namespace, name)
 
 		if menu.data.disableMovement then
-			FreezeEntityPosition(PlayerPedId(), false)
+			MenuData.LockCount.movement = math.max(0, MenuData.LockCount.movement - 1)
+			if MenuData.LockCount.movement == 0 then
+				FreezeEntityPosition(PlayerPedId(), false)
+			end
 		end
 
 		if menu.data.lockInventory then
-            LocalPlayer.state:set("inv_busy", false, true)
+			MenuData.LockCount.inventory = math.max(0, MenuData.LockCount.inventory - 1)
+			if MenuData.LockCount.inventory == 0 then
+				LocalPlayer.state:set("inv_busy", false, true)
+			end
         end
-		
 
-		for i = 1, #MenuData.Opened, 1 do
-			if MenuData.Opened[i] then
-				if
-					MenuData.Opened[i].type == type
-					and MenuData.Opened[i].namespace == namespace
-					and MenuData.Opened[i].name == name
-				then
-					MenuData.Opened[i] = nil
-				end
+
+		for i = #MenuData.Opened, 1, -1 do
+			if
+				MenuData.Opened[i]
+				and MenuData.Opened[i].type == type
+				and MenuData.Opened[i].namespace == namespace
+				and MenuData.Opened[i].name == name
+			then
+				table.remove(MenuData.Opened, i)
 			end
 		end
 
@@ -94,30 +101,21 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 	end
 
 	menu.removeElementByValue = function(value, stop)
-		-- remove element from table
-		for i = 1, #menu.data.elements, 1 do
-			if menu.data.elements[i] then
-				if menu.data.elements[i].value == value then
-					table.remove(menu.data.elements, i)
-					if stop then
-						break
-					end
+		-- remove element(s) matching value; iterate backwards so
+		-- table.remove doesn't skip the element that shifts into place
+		for i = #menu.data.elements, 1, -1 do
+			if menu.data.elements[i] and menu.data.elements[i].value == value then
+				table.remove(menu.data.elements, i)
+				if stop then
+					break
 				end
 			end
 		end
 	end
 
 	menu.removeElementByIndex = function(index, stop)
-		-- remove element from table
-		for i = 1, #menu.data.elements, 1 do
-			if menu.data.elements[i] then
-				if i == index then
-					table.remove(menu.data.elements, i)
-					if stop then
-						break
-					end
-				end
-			end
+		if menu.data.elements[index] then
+			table.remove(menu.data.elements, index)
 		end
 	end
 
@@ -139,13 +137,18 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 	end
 
 	menu.removeElement = function(query)
-		for i = 1, #menu.data.elements, 1 do
-			for k, v in pairs(query) do
-				if menu.data.elements[i] then
-					if menu.data.elements[i][k] == v then
-						menu.data.elements[i] = nil
+		for i = #menu.data.elements, 1, -1 do
+			local element = menu.data.elements[i]
+			if element then
+				local match = true
+				for k, v in pairs(query) do
+					if element[k] ~= v then
+						match = false
 						break
 					end
+				end
+				if match then
+					table.remove(menu.data.elements, i)
 				end
 			end
 		end
@@ -158,25 +161,26 @@ function MenuData.Open(type, namespace, name, data, submit, cancel, change, clos
 end
 
 function MenuData.Close(type, namespace, name)
-	for i = 1, #MenuData.Opened, 1 do
-		if MenuData.Opened[i] then
-			if
-				MenuData.Opened[i].type == type
-				and MenuData.Opened[i].namespace == namespace
-				and MenuData.Opened[i].name == name
-			then
-				MenuData.Opened[i].close()
-				MenuData.Opened[i] = nil
-			end
+	-- menu.close() already removes the entry from MenuData.Opened, so
+	-- iterate backwards and let it handle removal (avoids double-removal
+	-- and index-shift bugs from mutating the array while nil-ing entries)
+	for i = #MenuData.Opened, 1, -1 do
+		local opened = MenuData.Opened[i]
+		if
+			opened
+			and opened.type == type
+			and opened.namespace == namespace
+			and opened.name == name
+		then
+			opened.close()
 		end
 	end
 end
 
 function MenuData.CloseAll()
-	for i = 1, #MenuData.Opened, 1 do
+	for i = #MenuData.Opened, 1, -1 do
 		if MenuData.Opened[i] then
 			MenuData.Opened[i].close()
-			MenuData.Opened[i] = nil
 		end
 	end
 end
@@ -221,7 +225,7 @@ local MenuType = "default"
 RegisterNUICallback("menu_submit", function(data, cb)
 	PlaySoundFrontend("SELECT", "RDRO_Character_Creator_Sounds", true, 0)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
-	if menu.submit ~= nil then
+	if menu and menu.submit ~= nil then
 		menu.submit(data, menu)
 	end
 	cb('ok')
@@ -235,7 +239,7 @@ end)
 RegisterNUICallback("menu_cancel", function(data, cb)
 	PlaySoundFrontend("SELECT", "RDRO_Character_Creator_Sounds", true, 0)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
-	if menu.cancel ~= nil then
+	if menu and menu.cancel ~= nil then
 		menu.cancel(data, menu)
 	end
 	cb('ok')
@@ -244,18 +248,15 @@ end)
 RegisterNUICallback("menu_change", function(data, cb)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
 
-	for i = 1, #data.elements, 1 do
-		menu.setElement(i, "value", data.elements[i].value)
-
-		if data.elements[i].selected then
-			menu.setElement(i, "selected", true)
-		else
-			menu.setElement(i, "selected", false)
+	if menu then
+		for i = 1, #data.elements, 1 do
+			menu.setElement(i, "value", data.elements[i].value)
+			menu.setElement(i, "selected", data.elements[i].selected and true or false)
 		end
-	end
 
-	if menu.change ~= nil then
-		menu.change(data, menu)
+		if menu.change ~= nil then
+			menu.change(data, menu)
+		end
 	end
 
 	cb('ok')
@@ -263,8 +264,8 @@ end)
 
 RegisterNUICallback("update_last_selected", function(data, cb)
 	local menu = MenuData.GetOpened(MenuType, data._namespace, data._name)
-	local menuKey = menu.type .. "_" .. menu.namespace .. "_" .. menu.name
-	if data.selected ~= nil then
+	if menu and data.selected ~= nil then
+		local menuKey = menu.type .. "_" .. menu.namespace .. "_" .. menu.name
 		MenuData.LastSelectedIndex[menuKey] = data.selected
 	end
 	cb('ok')
@@ -279,7 +280,7 @@ CreateThread(function()
 	local PauseMenuState = false
 	local MenusToReOpen = {}
 	while true do
-		Wait(0)
+		Wait(#MenuData.Opened > 0 and 0 or 200)
 		if #MenuData.Opened > 0 then
 			if IsControlJustReleased(0, 0x43DBF61F) or IsDisabledControlJustReleased(0, 0x43DBF61F) then
 				SendNUIMessage({ ak_menubase_action = "controlPressed", ak_menubase_control = "ENTER" })
@@ -332,7 +333,9 @@ AddEventHandler("rsg-menubase:getData", function(cb)
 end)
 
 AddEventHandler("onClientResourceStart", function(resourceName)
-	MenuData.LastSelectedIndex = {}
+	if resourceName == GetCurrentResourceName() then
+		MenuData.LastSelectedIndex = {}
+	end
 end)
 
 exports("GetMenuData", function()
