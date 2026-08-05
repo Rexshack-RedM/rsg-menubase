@@ -97,3 +97,7 @@ All assets (paper, ink, icons, fonts) are stored in `html/img/`.
 - **RSG / Rexshack‑RedM** — adaptation & maintenance  
 - **Community contributors & translators**  
 - License: GPL‑3.0
+
+
+Modified from https://github.com/Rexshack-RedM/rsg-menubase, Aug 2025.
+See the Git history for changes. Distributed under GNU GPLv3.
