@@ -48,8 +48,17 @@
         '</div>'`;
 
     function scrollToElement(element) {
-        if (!element) {
-            return;
+        if (element) {
+            const menuContainer = document.querySelector(".menu .menu-items");
+            if (!menuContainer) return;
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = menuContainer.getBoundingClientRect();
+
+            if (elementRect.bottom > containerRect.bottom) {
+                menuContainer.scrollTop += elementRect.bottom - containerRect.bottom;
+            } else if (elementRect.top < containerRect.top) {
+                menuContainer.scrollTop -= containerRect.top - elementRect.top;
+            }
         }
 
         const menu = element.closest(".menu");
@@ -74,6 +83,17 @@
             0,
             Math.min(menuContainer.scrollHeight - menuContainer.clientHeight, menuContainer.scrollTop)
         );
+    }
+
+    // Shared by ENTER/TOP/DOWN/LEFT/RIGHT handlers so the currently
+    // selected item is scrolled into view after any menu re-render.
+    function scrollFocusedSelectedIntoView(focused) {
+        if (!focused) return;
+        const selectedElement = $("#menu_" + focused.namespace + "_" + focused.name)
+            .find(".menu-item.selected, .grid-item.selected");
+        if (selectedElement.length > 0) {
+            scrollToElement(selectedElement[0]);
+        }
     }
 
     window.MenuData = {};
@@ -114,20 +134,15 @@
             data.elements[i]._name = name;
         }
         let selectedIndex = (typeof MenuData.pos[namespace][name] !== "undefined") ? MenuData.pos[namespace][name] : 0;
+        if (selectedIndex >= data.elements.length) {
+            selectedIndex = 0;
+        }
         for (let i = 0; i < data.elements.length; i++) {
             data.elements[i].selected = (i === selectedIndex);
         }
 
         MenuData.opened[namespace][name] = data;
-        MenuData.pos[namespace][name] = 0;
-
-        for (let i = 0; i < data.elements.length; i++) {
-            if (data.elements[i].selected) {
-                MenuData.pos[namespace][name] = i;
-            } else {
-                data.elements[i].selected = false;
-            }
-        }
+        MenuData.pos[namespace][name] = selectedIndex;
 
         MenuData.focus.push({
             namespace: namespace,
@@ -135,13 +150,11 @@
         });
 
         MenuData.render();
-        let selectedElement = $("#menu_" + namespace + "_" + name).find(".menu-item.selected, .grid-item.selected");
-        if (selectedElement.length > 0) {
-            scrollToElement(selectedElement[0]);
-        }
+        scrollFocusedSelectedIntoView({ namespace, name });
     };
 
     MenuData.close = function (namespace, name) {
+        if (!MenuData.opened[namespace]) return;
         delete MenuData.opened[namespace][name];
 
         for (let i = 0; i < MenuData.focus.length; i++) {
@@ -304,9 +317,6 @@
                             lastmenu = "";
                         }
                         if (lastmenu != "undefined" && lastmenu != "") {
-                            let menu = MenuData.opened[focused.namespace][focused.name];
-                            let pos = MenuData.pos[focused.namespace][focused.name];
-                            let elem = menu.elements[pos];
                             MenuData.submit(focused.namespace, focused.name, "backup");
                         } else if (typeof focused != "undefined") {
                             MenuData.cancel(focused.namespace, focused.name);
@@ -325,32 +335,27 @@
                             let menu = MenuData.opened[focused.namespace][focused.name];
                             let pos = MenuData.pos[focused.namespace][focused.name];
 
-                            if (pos > 0) {
-                                MenuData.pos[focused.namespace][focused.name]--;
-                            } else {
-                                MenuData.pos[focused.namespace][focused.name] = menu.elements.length - 1;
-                            }
+                            if (menu.elements.length === 0) break;
 
-                            let elem = menu.elements[MenuData.pos[focused.namespace][focused.name]];
+                            let newPos = (pos > 0) ? pos - 1 : menu.elements.length - 1;
+                            MenuData.pos[focused.namespace][focused.name] = newPos;
+
+                            let elem = menu.elements[newPos];
 
                             for (let i = 0; i < menu.elements.length; i++) {
-                                menu.elements[i].selected = (i == MenuData.pos[focused.namespace][focused.name]);
+                                menu.elements[i].selected = (i === newPos);
                             }
-
 
                             $.post('https://' + MenuData.ResourceName + '/update_last_selected', JSON.stringify({
                                 _namespace: focused.namespace,
                                 _name: focused.name,
-                                selected: MenuData.pos[focused.namespace][focused.name]
+                                selected: newPos
                             }));
 
                             MenuData.change(focused.namespace, focused.name, elem);
                             MenuData.render();
                             $.post("https://" + MenuData.ResourceName + "/playsound");
-                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
-                            if (selectedElement.length > 0) {
-                                scrollToElement(selectedElement[0]);
-                            }
+                            scrollFocusedSelectedIntoView(focused);
                         }
 
                         break;
@@ -362,38 +367,28 @@
                         if (typeof focused != "undefined") {
                             let menu = MenuData.opened[focused.namespace][focused.name];
                             let pos = MenuData.pos[focused.namespace][focused.name];
-                            let length = menu.elements.length;
 
-                            if (pos < length - 1) {
-                                MenuData.pos[focused.namespace][focused.name]++;
-                            } else {
-                                MenuData.pos[focused.namespace][focused.name] = 0;
-                            }
+                            if (menu.elements.length === 0) break;
 
-                            let elem = menu.elements[MenuData.pos[focused.namespace][focused.name]];
+                            let newPos = (pos < menu.elements.length - 1) ? pos + 1 : 0;
+                            MenuData.pos[focused.namespace][focused.name] = newPos;
+
+                            let elem = menu.elements[newPos];
 
                             for (let i = 0; i < menu.elements.length; i++) {
-                                if (i == MenuData.pos[focused.namespace][focused.name]) {
-                                    menu.elements[i].selected = true;
-                                } else {
-                                    menu.elements[i].selected = false;
-                                }
+                                menu.elements[i].selected = (i === newPos);
                             }
 
                             $.post('https://' + MenuData.ResourceName + '/update_last_selected', JSON.stringify({
                                 _namespace: focused.namespace,
                                 _name: focused.name,
-                                selected: MenuData.pos[focused.namespace][focused.name]
+                                selected: newPos
                             }));
 
                             MenuData.change(focused.namespace, focused.name, elem);
                             MenuData.render();
                             $.post("https://" + MenuData.ResourceName + "/playsound");
-                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
-                            if (selectedElement.length > 0) {
-                                scrollToElement(selectedElement[0]);
-                            }
-
+                            scrollFocusedSelectedIntoView(focused);
                         }
 
                         break;
@@ -407,11 +402,16 @@
                             let pos = MenuData.pos[focused.namespace][focused.name];
                             let elem = menu.elements[pos];
 
-                            switch (elem.type) {
-                                case "default":
-                                    break;
-
-                                case "slider": {
+                            if (elem && elem.type === "slider") {
+                                if (typeof elem.options != "undefined") {
+                                    // options-driven slider: step back through the list
+                                    if (elem.value > 0) {
+                                        elem.value--;
+                                        MenuData.change(focused.namespace, focused.name, elem);
+                                        MenuData.submit(focused.namespace, focused.name, elem);
+                                    }
+                                } else {
+                                    // numeric min/max/hop-driven slider
                                     let min = typeof elem.min == "undefined" ? 0 : elem.min;
 
                                     if (elem.value > min) {
@@ -435,24 +435,16 @@
                                         MenuData.change(focused.namespace, focused.name, elem);
                                         MenuData.submit(focused.namespace, focused.name, elem);
                                     }
-
-                                    MenuData.render();
-                                    break;
                                 }
 
-                                default:
-                                    break;
+                                MenuData.render();
                             }
 
-                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
-                            if (selectedElement.length > 0) {
-                                scrollToElement(selectedElement[0]);
-                            }
+                            scrollFocusedSelectedIntoView(focused);
                         }
 
                         break;
                     }
-
 
                     case "RIGHT": {
                         let focused = MenuData.getFocused();
@@ -462,57 +454,47 @@
                             let pos = MenuData.pos[focused.namespace][focused.name];
                             let elem = menu.elements[pos];
 
-                            switch (elem.type) {
-                                case "default":
-                                    break;
-
-                                case "slider": {
-                                    if (typeof elem.options != "undefined" && elem.value < elem.options.length - 1) {
+                            if (elem && elem.type === "slider") {
+                                if (typeof elem.options != "undefined") {
+                                    // options-driven slider: step forward through the list
+                                    if (elem.value < elem.options.length - 1) {
                                         elem.value++;
                                         MenuData.change(focused.namespace, focused.name, elem);
                                         MenuData.submit(focused.namespace, focused.name, elem);
                                     }
+                                } else if (typeof elem.max != "undefined" && elem.value < elem.max) {
+                                    // numeric min/max/hop-driven slider
+                                    if (typeof elem.hop != "undefined") {
+                                        let min = typeof elem.min == "undefined" ? 0 : elem.min;
 
-                                    if (typeof elem.max != "undefined" && elem.value < elem.max) {
-                                        if (typeof elem.hop != "undefined") {
-                                            let min = typeof elem.min == "undefined" ? 0 : elem.min;
-
-                                            if (min > 0 && min == elem.value) {
-                                                elem.value = 0;
-                                            }
-
-                                            if (Number.isInteger(elem.hop)) {
-                                                elem.value = elem.value + elem.hop;
-                                            } else {
-                                                elem.value = (
-                                                    Number(elem.value) + Number(elem.hop)
-                                                ).toFixed(1);
-                                            }
-
-                                            elem.value = Number(elem.value);
-
-                                            if (elem.value > elem.max) {
-                                                elem.value = elem.max;
-                                            }
-                                        } else {
-                                            elem.value++;
+                                        if (min > 0 && min == elem.value) {
+                                            elem.value = 0;
                                         }
-                                        MenuData.change(focused.namespace, focused.name, elem);
-                                        MenuData.submit(focused.namespace, focused.name, elem);
-                                    }
 
-                                    MenuData.render();
-                                    break;
+                                        if (Number.isInteger(elem.hop)) {
+                                            elem.value = elem.value + elem.hop;
+                                        } else {
+                                            elem.value = (
+                                                Number(elem.value) + Number(elem.hop)
+                                            ).toFixed(1);
+                                        }
+
+                                        elem.value = Number(elem.value);
+
+                                        if (elem.value > elem.max) {
+                                            elem.value = elem.max;
+                                        }
+                                    } else {
+                                        elem.value++;
+                                    }
+                                    MenuData.change(focused.namespace, focused.name, elem);
+                                    MenuData.submit(focused.namespace, focused.name, elem);
                                 }
 
-                                default:
-                                    break;
+                                MenuData.render();
                             }
 
-                            let selectedElement = $("#menu_" + focused.namespace + "_" + focused.name).find(".menu-item.selected, .grid-item.selected");
-                            if (selectedElement.length > 0) {
-                                scrollToElement(selectedElement[0]);
-                            }
+                            scrollFocusedSelectedIntoView(focused);
                         }
 
                         break;
