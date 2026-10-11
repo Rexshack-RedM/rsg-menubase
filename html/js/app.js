@@ -60,6 +60,29 @@
                 menuContainer.scrollTop -= containerRect.top - elementRect.top;
             }
         }
+
+        const menu = element.closest(".menu");
+        const menuContainer = menu ? menu.querySelector(".menu-items") : null;
+
+        if (!menuContainer) {
+            return;
+        }
+
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = menuContainer.getBoundingClientRect();
+        const offsetTop = elementRect.top - containerRect.top;
+        const offsetBottom = elementRect.bottom - containerRect.bottom;
+
+        if (offsetBottom > 0) {
+            menuContainer.scrollTop += offsetBottom + 8;
+        } else if (offsetTop < 0) {
+            menuContainer.scrollTop += offsetTop - 8;
+        }
+
+        menuContainer.scrollTop = Math.max(
+            0,
+            Math.min(menuContainer.scrollHeight - menuContainer.clientHeight, menuContainer.scrollTop)
+        );
     }
 
     // Shared by ENTER/TOP/DOWN/LEFT/RIGHT handlers so the currently

@@ -129,3 +129,8 @@ Please report bugs or feature requests via the resource's GitHub repository issu
 ## License
 
 Released under the GNU General Public License v3.0 — see [`LICENSE`](LICENSE) for details.
+
+
+
+Modified from https://github.com/Rexshack-RedM/rsg-menubase, Aug 2025.
+See the Git history for changes. Distributed under GNU GPLv3.
