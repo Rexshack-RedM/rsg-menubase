@@ -87,4 +87,4 @@ end)
 | Menu vanishes behind the pause menu | Expected; it reopens when the pause menu closes |
 | Player stuck frozen | A menu with `disableMovement` was not closed; call `menu.close()` on cancel |
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
